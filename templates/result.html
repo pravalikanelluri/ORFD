@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis Result - Fraud Detection</title>
+    <!-- Modern Fonts and Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-sidebar: #191c24;
+            --bg-main: #13151a;
+            --bg-card: #202430;
+            --primary: #4f46e5;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --fraudulent: #ef4444;
+            --fraudulent-bg: rgba(239, 68, 68, 0.1);
+            --genuine: #10b981;
+            --genuine-bg: rgba(16, 185, 129, 0.1);
+            --border-color: rgba(255, 255, 255, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 250px;
+            background-color: var(--bg-sidebar);
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border-color);
+            transition: width 0.3s ease;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .sidebar.collapsed {
+            width: 75px;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            text-align: right;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: text-align 0.3s ease;
+        }
+
+        .sidebar.collapsed .sidebar-header {
+            text-align: center;
+        }
+
+        .sidebar-header i {
+            transition: transform 0.3s ease;
+            display: inline-block;
+            font-size: 1.2rem;
+        }
+
+        .sidebar.collapsed .sidebar-header i {
+            transform: rotate(180deg);
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            margin-top: 10px;
+        }
+
+        .sidebar-menu li {
+            padding: 15px 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .sidebar.collapsed .sidebar-menu li span {
+            opacity: 0;
+            display: none;
+        }
+
+        .sidebar-menu li span {
+            transition: opacity 0.2s ease;
+        }
+
+        .sidebar-menu li.active,
+        .sidebar-menu li:hover {
+            color: var(--text-main);
+            background-color: rgba(255, 255, 255, 0.05);
+            border-left: 3px solid var(--text-main);
+        }
+
+        .sidebar-menu li i {
+            width: 20px;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .top-banner {
+            background-color: var(--primary);
+            padding: 15px 20px;
+            text-align: center;
+            font-weight: 500;
+            font-size: 1.05rem;
+            position: relative;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+
+        .user-controls {
+            position: absolute;
+            right: 25px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            gap: 18px;
+            align-items: center;
+        }
+
+        .user-controls i {
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            background-color: #cbd5e1;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .dashboard-container {
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            overflow-y: auto;
+            align-items: center;
+        }
+
+        .card {
+            background-color: var(--bg-card);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 900px;
+        }
+
+        /* Result Header Banner */
+        .result-banner {
+            text-align: center;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 2px solid transparent;
+        }
+
+        .result-banner.fraudulent {
+            background-color: var(--fraudulent-bg);
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .result-banner.genuine {
+            background-color: var(--genuine-bg);
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .result-icon {
+            font-size: 4rem;
+            margin-bottom: 15px;
+        }
+
+        .fraudulent .result-icon {
+            color: var(--fraudulent);
+        }
+
+        .genuine .result-icon {
+            color: var(--genuine);
+        }
+
+        .result-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+
+        .fraudulent .result-title {
+            color: var(--fraudulent);
+        }
+
+        .genuine .result-title {
+            color: var(--genuine);
+        }
+
+        .result-desc {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+        }
+
+        /* Split Section */
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        /* Original Text */
+        .text-section {
+            background-color: rgba(0, 0, 0, 0.15);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            height: 100%;
+        }
+
+        .text-section h3 {
+            font-size: 1.1rem;
+            color: var(--text-main);
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .original-text-content {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+            white-space: pre-wrap;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        /* Gauge Section Reused */
+        .gauge-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background-color: rgba(0, 0, 0, 0.15);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .gauge-container {
+            position: relative;
+            width: 100%;
+            max-width: 250px;
+            height: 150px;
+            margin: 20px auto 0;
+        }
+
+        .gauge-score {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .gauge-label {
+            margin-top: 30px;
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        .btn-back {
+            display: inline-block;
+            margin-top: 40px;
+            padding: 12px 30px;
+            background-color: transparent;
+            color: var(--text-main);
+            border: 1px solid #475569;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .btn-back:hover {
+            background-color: #334155;
+            border-color: #cbd5e1;
+        }
+
+        .btn-back i {
+            margin-right: 8px;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-box {
+            background: var(--bg-card);
+            width: 90%;
+            max-width: 400px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .modal-overlay.show .modal-box {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .modal-close {
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: color 0.2s;
+            font-size: 1.2rem;
+        }
+
+        .modal-close:hover {
+            color: var(--text-main);
+        }
+
+        .modal-body {
+            padding: 20px;
+            color: var(--text-muted);
+            line-height: 1.5;
+            font-size: 0.95rem;
+        }
+
+        .modal-footer {
+            padding: 15px 20px;
+            background: rgba(0, 0, 0, 0.2);
+            text-align: right;
+            border-top: 1px solid var(--border-color);
+        }
+
+        @media (max-width: 768px) {
+            .details-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <i class="fa-solid fa-angles-left" onclick="toggleSidebar()"></i>
+        </div>
+        <ul class="sidebar-menu">
+            <li onclick="window.location.href='/'">
+                <i class="fa-solid fa-house"></i>
+                <span>Home</span>
+            </li>
+            <li class="active" onclick="window.location.href='/'">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <span>Analyse Posting</span>
+            </li>
+            <li onclick="window.location.href='/reports'">
+                <i class="fa-solid fa-chart-simple"></i>
+                <span>Reports</span>
+            </li>
+            <li onclick="window.location.href='/settings'">
+                <i class="fa-solid fa-gear"></i>
+                <span>Settings</span>
+            </li>
+            <li onclick="window.location.href='/#features'">
+                <i class="fa-solid fa-layer-group"></i>
+                <span>System Features</span>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main Application -->
+    <div class="main-content">
+        <!-- Header -->
+        <header class="top-banner">
+            Online Recruitment Fraud Detection using Deep Learning
+            <div class="user-controls">
+                <i class="fa-regular fa-bell"
+                    onclick="showModal('Notifications', 'You have 4 new notifications related to recent security scans.');"></i>
+                <div class="avatar"
+                    onclick="showModal('User Profile', '<b>User:</b> System Admin<br><b>Role:</b> Administrator<br><b>Access Level:</b> Full Permissions<br><b>Status:</b> Active Session')"
+                    style="cursor: pointer;">A</div>
+            </div>
+        </header>
+
+        <!-- Dashboard Content -->
+        <div class="dashboard-container">
+
+            <div class="card">
+                <!-- Dynamic Banner -->
+                {% if result == 'FRAUDULENT' %}
+                <div class="result-banner fraudulent">
+                    <div class="result-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                    <div class="result-title">FRAUDULENT POSTING DETECTED</div>
+                    <div class="result-desc">Our deep learning model identified high-risk patterns within this job
+                        description.</div>
+                </div>
+                {% else %}
+                <div class="result-banner genuine">
+                    <div class="result-icon"><i class="fa-solid fa-shield-check"></i></div>
+                    <div class="result-title">GENUINE POSTING</div>
+                    <div class="result-desc">This job description appears authentic and lacks common fraudulent markers.
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="details-grid">
+
+                    <!-- Probability Section -->
+                    <div class="gauge-section">
+                        <h3 style="margin-bottom: 10px;">Probability Analysis</h3>
+                        <p style="font-size: 0.85rem; color: var(--text-muted);">Neural Network Confidence Score</p>
+
+                        <div class="gauge-container">
+                            <canvas id="gaugeChart"></canvas>
+                            <div class="gauge-score" id="scoreValue" data-target="{{ probability }}">{{
+                                "%.1f"|format(probability) }}</div>
+                        </div>
+
+                        <div class="gauge-label">
+                            {% if probability > 70 %}
+                            <span style="color: var(--fraudulent);">High Risk Level</span>
+                            {% elif probability > 30 %}
+                            <span style="color: #f59e0b;">Moderate Risk Level</span>
+                            {% else %}
+                            <span style="color: var(--genuine);">Low Risk Level</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Analyzed Text Section -->
+                    <div class="text-section">
+                        <h3><i class="fa-solid fa-file-lines" style="margin-right: 8px;"></i> Document Analyzed</h3>
+                        <div class="original-text-content">{{ original_text }}</div>
+                    </div>
+                </div>
+
+                <div style="text-align: center;">
+                    <a href="/" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Run Another Scan</a>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Custom Modal -->
+        <div id="customModal" class="modal-overlay">
+            <div class="modal-box">
+                <div class="modal-header">
+                    <h3 id="modalTitle">Notice</h3>
+                    <i class="fa-solid fa-xmark modal-close" onclick="closeModal()"></i>
+                </div>
+                <div class="modal-body" id="modalMessage">
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-back" style="margin-top: 0; padding: 8px 20px; font-size: 0.9rem;"
+                        onclick="closeModal()">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart Setup Reused from index for consistency -->
+        <script>
+            const ctx = document.getElementById('gaugeChart');
+            const targetScoreElement = document.getElementById('scoreValue');
+            const finalScore = parseFloat(targetScoreElement.getAttribute('data-target')) || 0;
+
+            let currentAnimatedScore = 0;
+
+            const gaugeNeedle = {
+                id: 'gaugeNeedle',
+                afterDatasetDraw(chart, args, plugins) {
+                    const { ctx, data } = chart;
+                    ctx.save();
+                    const needleValue = Math.min(Math.max(currentAnimatedScore, 0), 100);
+                    const angle = Math.PI + (1 / 100 * needleValue * Math.PI);
+                    const meta = chart.getDatasetMeta(0);
+                    const cx = meta.data[0].x;
+                    const cy = meta.data[0].y;
+                    const radius = meta.data[0].innerRadius;
+
+                    ctx.translate(cx, cy);
+                    ctx.rotate(angle);
+                    ctx.beginPath();
+                    ctx.moveTo(0, -5);
+                    ctx.lineTo(radius * 1.5, 0);
+                    ctx.lineTo(0, 5);
+                    ctx.fillStyle = '#94a3b8';
+                    ctx.fill();
+
+                    ctx.rotate(-angle);
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 10, 0, Math.PI * 2);
+                    ctx.fillStyle = '#cbd5e1';
+                    ctx.fill();
+                    ctx.restore();
+                }
+            };
+
+            const chartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Low Risk', 'Medium Risk', 'High Risk'],
+                    datasets: [{
+                        data: [33.3, 33.3, 33.3],
+                        backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+                        borderWidth: 0,
+                        cutout: '80%',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    rotation: 270,
+                    circumference: 180,
+                    layout: { padding: { bottom: 0 } },
+                    animation: { duration: 0 },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: false }
+                    }
+                },
+                plugins: [gaugeNeedle]
+            });
+
+            if (finalScore > 0) {
+                const animationDuration = 1500;
+                const frameRate = 30;
+                const steps = animationDuration / frameRate;
+                const increment = finalScore / steps;
+
+                const timer = setInterval(() => {
+                    currentAnimatedScore += increment;
+                    if (currentAnimatedScore >= finalScore) {
+                        currentAnimatedScore = finalScore;
+                        clearInterval(timer);
+                    }
+                    targetScoreElement.innerText = currentAnimatedScore.toFixed(1);
+                    chartInstance.update();
+                }, frameRate);
+            } else {
+                chartInstance.update();
+            }
+
+            // Sidebar Toggle
+            function toggleSidebar() {
+                document.querySelector('.sidebar').classList.toggle('collapsed');
+            }
+
+            // Modal Logic
+            function showModal(title, message) {
+                document.getElementById('modalTitle').innerText = title;
+                document.getElementById('modalMessage').innerText = message;
+                const modal = document.getElementById('customModal');
+                modal.style.display = 'flex';
+                setTimeout(() => { modal.classList.add('show'); }, 10);
+            }
+
+            function closeModal() {
+                const modal = document.getElementById('customModal');
+                modal.classList.remove('show');
+                setTimeout(() => { modal.style.display = 'none'; }, 300);
+            }
+        </script>
+</body>
+
+</html>

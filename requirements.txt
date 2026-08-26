@@ -1,0 +1,13 @@
+Flask
+numpy
+pandas
+matplotlib
+seaborn
+tqdm
+nltk
+scikit-learn
+xgboost
+keras==2.10.0
+tensorflow==2.10.0
+spacy
+scipy

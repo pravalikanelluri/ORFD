@@ -1,0 +1,5 @@
+{
+    "python.analysis.extraPaths": [
+        "C:\\Users\\india\\AppData\\Local\\Programs\\Python\\Python310\\lib\\site-packages"
+    ]
+}

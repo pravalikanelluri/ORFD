@@ -1,0 +1,57 @@
+# Jupyter Notebook Cell Execution Summary
+
+The project revolves around the [real_or_fake_job_postings_with_bi_directional_lstm.ipynb](file:///c:/Users/india/OneDrive%20-%20Chandigarh%20University/Desktop/trail%201/real_or_fake_job_postings_with_bi_directional_lstm.ipynb) notebook. This notebook processes raw text strings from job postings, feeds them through an intricate Natural Language Processing (NLP) pipeline, and trains a Bi-Directional Recurrent Neural Network. 
+
+Here is a step-by-step summary of exactly what occurs in each code execution block (cell) throughout the notebook:
+
+### Phase 1: Data Initialization
+*   **Cell 1**: `import pandas as pd` - Imports the pandas library necessary for complex data and matrix manipulation.
+*   **Cell 2**: `df1=pd.read_csv('/content/fake_job_postings.csv', engine='python')` - Loads the raw CSV dataset encompassing thousands of job histories.
+*   **Cell 3**: `df1.shape` - Displays the raw dimensions of the dataset (`5693 rows, 18 columns`).
+*   **Cell 4**: `df=df1[['description','requirements','fraudulent']]` - Isolates only the specific columns needed for semantic learning: descriptions, requirements, and the true fraud label mappings.
+*   **Cell 5**: `df=df.dropna()` - Executes a crucial data cleaning step by dropping missing constraints/NaN values. 
+
+### Phase 2: Feature Engineering
+*   **Cell 7**: `X=df.drop('fraudulent',axis=1)` - Splits independent variables from the main table frame to represent the predictive inputs.
+*   **Cell 8**: `y=df['fraudulent']` - Carves out the dependent target class mapping (1.0 = fake, 0.0 = real) which the model must learn to predict.
+*   **Cell 9**: `y.value_counts()` - Returns a summary of class distributions displaying that the baseline is inherently imbalanced.
+
+### Phase 3: NLP Library Imports & Deep Learning Engine Setup
+*   **Cell 10**: `tf.__version__` - Pulls the TensorFlow backend dependencies.
+*   **Cell 11**: Block of `from tensorflow.keras... import` functions - Grabs essential ML architecture functions (Sequential model generation, Text padding, Bidirectional flow control, LSTM routing, Text Embeddings, and standard Dense output variables).
+*   **Cell 12**: `voc_size=5000` - Creates a system vocabulary upper limit indicating that calculations will be performed based on the 5000 most common root terms.
+*   **Cell 14**: `message = X.copy()` - Saves a deep copy of inputs to maintain integrity while preprocessing strings.
+*   **Cell 15-16**: Peeks at individual string fields (`message['description'][1]`) and enforces indexing structural standards (`reset_index`).
+*   **Cell 17**: Extracts the `stopwords` object imported via the base python Natural Language Toolkit (`nltk`).
+
+### Phase 4: Text Processing Subroutine
+*   **Cell 18 (The Pre-processing Pipeline):** 
+    It defines an empty `corpus` array. Using a massive iterative loop, this block cleans each and every job description in four ways:
+    1. Replaces strange characters and numbers using a Regex boundary format (`[^a-zA-Z]`).
+    2. Converts all extracted strings into exact lowercase standardizations (`.lower()`).
+    3. Traces token blocks (`.split()`) and enforces semantic Stemming via `PorterStemmer` (changing words like 'jumping' -> 'jump').
+    4. Strips all `stopwords` (common english words like 'the' or 'and' that dilute mathematical meaning) out of the string before replacing it back on the list array.
+*   **Cell 20**: `onehot_repr=[one_hot(words,voc_size)for words in corpus]` - Translates the finished raw sentences into vectors composed strictly of unique vocabulary dictionary indices based on the 5000 word limiter defined in Cell 12.
+*   **Cell 21**: Tests the output to ensure the sentence is converted perfectly to integers.
+
+### Phase 5: Recurrent Matrix Setup 
+*   **Cell 23**: Identifies a standard matrix horizontal slice of `sent_length=40`. Then maps the `pad_sequences()` function to standardize all sentences to identical lengths by appending leading zeros, creating an even 2D geometry object `embedded_docs`.
+*   **Cell 24**: Displays the finalized numerical multi-dimensional NLP array.
+
+### Phase 6: Constructing the RNN Model Setup
+*   **Cell 25**: Neural Network Pipeline definition:
+    1.  Calculates an `Embedding` dimension vector mapping array.
+    2.  Creates the `Bidirectional(LSTM(100))` layer tracking sequences of nodes both forwards and backwards natively.
+    3.  Pounds the gradient layer using `Dropout(0.3)` randomly deleting 30% of node weights on updates to artificially increase robust tracking.
+    4.  Aggregates the total math functions at the bottom layer using `Dense(1)` combined with a standard sigmoid thresholding curve designed specifically for binary classification routing.
+    5.  `model1.compile(...)` binds the system dynamically to the `binary_crossentropy` optimization matrix parameter.
+
+### Phase 7: Deep Learning Execution
+*   **Cell 27**: `np.array()` applies native numpy translation structures.
+*   **Cell 29**: Distributes inputs across testing/training segments dynamically taking 25% of values using `train_test_split()`.
+*   **Cell 30**: `model1.fit(...)` - Re-arranges the internal weights 12 individual times (`epochs=12`) mapping batch distributions. Over each cycle, gradient accuracy scales upwards of 99%.
+*   **Cell 32**: Projects simulated validations onto `y_pred` targeting threshold limits higher than a typical 0.5.
+
+### Phase 8: Efficacy Checks & Storing Weight Values
+*   **Cell 33-35**: Maps metrics including `confusion_matrix`, `accuracy_score` (~97.4%), and `classification_report` testing how well the Bi-Directional model identifies false/true positives.
+*   **Cell 36**: `model1.save(...)` Finally, securely extracts those learned weights generated during optimization cycles and writes a fixed static structure file named [fake_job_model.h5](file:///c:/Users/india/OneDrive%20-%20Chandigarh%20University/Desktop/trail%201/fake_job_model.h5) onto the local hard drive for usage inside the flask server.
